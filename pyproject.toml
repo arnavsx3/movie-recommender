@@ -5,8 +5,9 @@ description = "A hybrid movie recommendation system using content-based and coll
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
-    "bcrypt>=5.0.0",
+    "bcrypt==4.0.1",
     "chromadb>=1.5.9",
+    "email-validator>=2.3.0",
     "fastapi>=0.136.1",
     "nltk>=3.9.4",
     "numpy>=2.4.4",
