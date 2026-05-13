@@ -14,6 +14,7 @@ wheels/
 .env.*
 
 # Data files (can be large)
+data/chromadb/
 data/raw/
 data/processed/
 *.csv
