@@ -5,7 +5,7 @@ from sentence_transformers import SentenceTransformer
 
 load_dotenv()
 
-CHROMA_PATH = Path(__file__).resolve().parents[4] / "data" / "chromadb"
+CHROMA_PATH = Path(__file__).resolve().parents[3] / "data" / "chromadb"
 
 _client = None
 _collection = None
