@@ -1,5 +1,3 @@
-# backend/app/api/routes/ratings.py
-
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from uuid import UUID
@@ -27,7 +25,6 @@ def submit_rating(
     if not movie:
         raise HTTPException(status_code=404, detail="Movie not found")
 
-    # Upsert — update if already rated
     existing = (
         db.query(Rating)
         .filter(Rating.user_id == current_user.id, Rating.movie_id == payload.movie_id)

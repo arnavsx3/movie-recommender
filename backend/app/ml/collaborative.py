@@ -12,7 +12,6 @@ def _build_matrix(db: Session) -> tuple[dict, dict, np.ndarray]:
     if not all_ratings:
         return {}, {}, np.array([])
 
-    # Map UUIDs to indices
     user_ids = sorted(set(str(r.user_id) for r in all_ratings))
     movie_ids = sorted(set(str(r.movie_id) for r in all_ratings))
 
