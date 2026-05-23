@@ -64,7 +64,7 @@ def recommend_collaborative(
     already_rated = np.where(matrix[u] > 0)[0]
     predicted[already_rated] = -1
 
-    top_indices = np.argsort(predicted)[::-1][:n] # checkpoint
+    top_indices = np.argsort(predicted)[::-1][:n]
 
     results = []
     for i in top_indices:
