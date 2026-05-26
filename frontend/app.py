@@ -1,9 +1,9 @@
 import streamlit as st
+import requests
 
-st.title("Movie Recommender")
-st.write("Enter a movie to get recommendations!")
+API_BASE = "http://localhost:8000"
 
-movie = st.text_input("Movie title")
-
-if st.button("Recommend"):
-    st.write(f"Recommendations for **{movie}** coming soon...")
+if "token" not in st.session_state:
+    st.session_state.token = None
+if "username" not in st.session_state:
+    st.session_state.username = None
