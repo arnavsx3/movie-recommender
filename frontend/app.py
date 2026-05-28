@@ -68,3 +68,7 @@ with st.sidebar:
                     st.success("Account created! Please log in.")
                 else:
                     st.error(r.json().get("detail", "Signup failed"))
+
+st.title("🎬 Movie Recommender")
+
+tab_recommend, tab_search, tab_rate = st.tabs(["Recommend", "Search", "My Ratings"])
