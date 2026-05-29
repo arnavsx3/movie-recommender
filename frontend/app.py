@@ -72,3 +72,35 @@ with st.sidebar:
 st.title("🎬 Movie Recommender")
 
 tab_recommend, tab_search, tab_rate = st.tabs(["Recommend", "Search", "My Ratings"])
+
+with tab_recommend:
+    st.subheader("Get recommendations by title")
+    movie = st.text_input("Movie title", key="rec_title")
+    alpha = st.slider(
+        "Personalization blend",
+        0.0,
+        1.0,
+        0.5,
+        0.1,
+        help="1.0 = content only, 0.0 = collaborative only",
+    )
+    n = st.slider("Number of results", 5, 50, 10, key="rec_n")
+
+    if st.button("Recommend"):
+        if not movie:
+            st.warning("Enter a movie title.")
+        else:
+            params = {"title": movie, "n": n, "alpha": alpha}
+            r = api_get(
+                "/movies/recommend", params=params, auth=bool(st.session_state.token)
+            )
+            if r.status_code == 200:
+                data = r.json()
+                st.markdown(f"**Recommendations for:** {data['title']}")
+                for i, rec in enumerate(data["recommendations"], 1):
+                    source_badge = "🔀" if rec.get("source") == "hybrid" else "📄"
+                    st.write(
+                        f"{i}. {source_badge} **{rec['title']}** — score: `{rec['score']}`"
+                    )
+            else:
+                st.error(r.json().get("detail", "Something went wrong"))
