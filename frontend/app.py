@@ -104,3 +104,29 @@ with tab_recommend:
                     )
             else:
                 st.error(r.json().get("detail", "Something went wrong"))
+
+with tab_rate:
+    st.subheader("Rate a movie")
+
+    if not st.session_state.token:
+        st.info("Log in to rate movies and get personalized recommendations.")
+    else:
+        # Submit a rating
+        with st.form("rate_form"):
+            movie_id = st.text_input("Movie ID (UUID)")
+            rating_val = st.slider("Rating", 0.5, 5.0, 3.0, 0.5)
+            submitted = st.form_submit_button("Submit Rating")
+
+            if submitted:
+                if not movie_id:
+                    st.warning("Enter a movie ID.")
+                else:
+                    r = api_post(
+                        "/ratings/",
+                        {"movie_id": movie_id, "rating": rating_val},
+                        auth=True,
+                    )
+                    if r.status_code == 200:
+                        st.success("Rating submitted!")
+                    else:
+                        st.error(r.json().get("detail", "Failed to submit rating"))
