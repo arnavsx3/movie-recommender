@@ -3,11 +3,15 @@ import requests
 
 API_BASE = "http://localhost:8000"
 
+
+# ── Session state defaults ──────────────────────────────────────────────────
 if "token" not in st.session_state:
     st.session_state.token = None
 if "username" not in st.session_state:
     st.session_state.username = None
 
+
+# ── Helpers ─────────────────────────────────────────────────────────────────
 def auth_headers():
     return {"Authorization": f"Bearer {st.session_state.token}"}
 
@@ -23,6 +27,8 @@ def api_get(endpoint: str, params: dict = {}, auth: bool = False):
     r = requests.get(f"{API_BASE}{endpoint}", params=params, headers=headers)
     return r
 
+
+# ── Sidebar — Auth ───────────────────────────────────────────────────────────
 with st.sidebar:
     st.header("Account")
 
@@ -69,10 +75,14 @@ with st.sidebar:
                 else:
                     st.error(r.json().get("detail", "Signup failed"))
 
+
+# ── Main — Tabs ──────────────────────────────────────────────────────────────
 st.title("🎬 Movie Recommender")
 
 tab_recommend, tab_search, tab_rate = st.tabs(["Recommend", "Search", "My Ratings"])
 
+
+# ── Tab 1: Recommend by title ────────────────────────────────────────────────
 with tab_recommend:
     st.subheader("Get recommendations by title")
     movie = st.text_input("Movie title", key="rec_title")
@@ -105,6 +115,34 @@ with tab_recommend:
             else:
                 st.error(r.json().get("detail", "Something went wrong"))
 
+
+# ── Tab 2: Search by text ────────────────────────────────────────────────────
+with tab_search:
+    st.subheader("Search movies by description")
+    query = st.text_input("Describe what you want to watch", key="search_query")
+    n2 = st.slider("Number of results", 5, 50, 10, key="search_n")
+
+    if st.button("Search"):
+        if not query:
+            st.warning("Enter a search query.")
+        else:
+            params = {"q": query, "n": n2}
+            r = api_get(
+                "/movies/search", params=params, auth=bool(st.session_state.token)
+            )
+            if r.status_code == 200:
+                data = r.json()
+                st.markdown(f"**Results for:** {data['query']}")
+                for i, rec in enumerate(data["results"], 1):
+                    source_badge = "🔀" if rec.get("source") == "hybrid" else "📄"
+                    st.write(
+                        f"{i}. {source_badge} **{rec['title']}** — score: `{rec['score']}`"
+                    )
+            else:
+                st.error(r.json().get("detail", "Something went wrong"))
+
+
+# ── Tab 3: Rate movies ───────────────────────────────────────────────────────
 with tab_rate:
     st.subheader("Rate a movie")
 
@@ -130,3 +168,29 @@ with tab_rate:
                         st.success("Rating submitted!")
                     else:
                         st.error(r.json().get("detail", "Failed to submit rating"))
+
+        # View my ratings
+        st.divider()
+        st.subheader("My Ratings")
+        if st.button("Load my ratings"):
+            from jwt import decode as jwt_decode, options as jwt_options
+
+            try:
+                payload = jwt_decode(
+                    st.session_state.token, options={"verify_signature": False}
+                )
+                user_id = payload.get("sub")
+                r = api_get(f"/ratings/{user_id}", auth=True)
+                if r.status_code == 200:
+                    ratings = r.json()
+                    if not ratings:
+                        st.info("No ratings yet.")
+                    else:
+                        for rating in ratings:
+                            st.write(
+                                f"🎬 `{rating['movie_id']}` —  {rating['rating']}"
+                            )
+                else:
+                    st.error(r.json().get("detail", "Failed to load ratings"))
+            except Exception as e:
+                st.error(f"Could not decode token: {e}")
