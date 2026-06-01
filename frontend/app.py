@@ -173,12 +173,15 @@ with tab_rate:
         st.divider()
         st.subheader("My Ratings")
         if st.button("Load my ratings"):
-            from jwt import decode as jwt_decode, options as jwt_options
+            import jwt
 
             try:
-                payload = jwt_decode(
-                    st.session_state.token, options={"verify_signature": False}
+                payload = jwt.decode(
+                    st.session_state.token,
+                    algorithms=["HS256"],
+                    options={"verify_signature": False},
                 )
+
                 user_id = payload.get("sub")
                 r = api_get(f"/ratings/{user_id}", auth=True)
                 if r.status_code == 200:
@@ -187,9 +190,7 @@ with tab_rate:
                         st.info("No ratings yet.")
                     else:
                         for rating in ratings:
-                            st.write(
-                                f"🎬 `{rating['movie_id']}` —  {rating['rating']}"
-                            )
+                            st.write(f"🎬 `{rating['movie_id']}` —  {rating['rating']}")
                 else:
                     st.error(r.json().get("detail", "Failed to load ratings"))
             except Exception as e:
