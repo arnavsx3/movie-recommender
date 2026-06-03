@@ -32,6 +32,20 @@ def api_get(endpoint: str, params: dict = {}, auth: bool = False):
     r = requests.get(f"{API_BASE}{endpoint}", params=params, headers=headers)
     return r
 
+def get_poster_url(title: str) -> str | None:
+    try:
+        r = requests.get(
+            TMDB_SEARCH_URL,
+            params={"api_key": TMDB_API_KEY, "query": title},
+            timeout=5,
+        )
+        data = r.json()
+        results = data.get("results", [])
+        if results and results[0].get("poster_path"):
+            return TMDB_IMAGE_BASE + results[0]["poster_path"]
+    except Exception:
+        pass
+    return None
 
 with st.sidebar:
     st.header("Account")
