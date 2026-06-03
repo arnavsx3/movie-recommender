@@ -1,8 +1,15 @@
 import streamlit as st
 import requests
+import jwt
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 API_BASE = "http://localhost:8000"
-
+TMDB_API_KEY = os.getenv("TMDB_API_KEY")
+TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w300"
+TMDB_SEARCH_URL = "https://api.themoviedb.org/3/search/movie"
 
 if "token" not in st.session_state:
     st.session_state.token = None
