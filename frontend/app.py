@@ -73,7 +73,6 @@ with st.sidebar:
             st.session_state.token = None
             st.session_state.username = None
             st.rerun()
-
     else:
         tab_login, tab_signup = st.tabs(["Login", "Sign Up"])
 
@@ -133,17 +132,19 @@ with tab_recommend:
         if not movie:
             st.warning("Enter a movie title.")
         else:
-            params = {"title": movie, "n": n, "alpha": alpha}
-            r = api_get(
-                "/movies/recommend", params=params, auth=bool(st.session_state.token)
-            )
+            with st.spinner("Fetching recommendations..."):
+                params = {"title": movie, "n": n, "alpha": alpha}
+                r = api_get(
+                    "/movies/recommend",
+                    params=params,
+                    auth=bool(st.session_state.token),
+                )
             if r.status_code == 200:
                 data = r.json()
                 st.markdown(f"**Recommendations for:** {data['title']}")
                 for i, rec in enumerate(data["recommendations"], 1):
-                    source_badge = "🔀" if rec.get("source") == "hybrid" else "📄"
-                    st.write(
-                        f"{i}. {source_badge} **{rec['title']}** — score: `{rec['score']}`"
+                    render_movie_card(
+                        i, rec["title"], rec["score"], rec.get("source", "content")
                     )
             else:
                 st.error(r.json().get("detail", "Something went wrong"))
@@ -158,17 +159,17 @@ with tab_search:
         if not query:
             st.warning("Enter a search query.")
         else:
-            params = {"q": query, "n": n2}
-            r = api_get(
-                "/movies/search", params=params, auth=bool(st.session_state.token)
-            )
+            with st.spinner("Searching..."):
+                params = {"q": query, "n": n2}
+                r = api_get(
+                    "/movies/search", params=params, auth=bool(st.session_state.token)
+                )
             if r.status_code == 200:
                 data = r.json()
                 st.markdown(f"**Results for:** {data['query']}")
                 for i, rec in enumerate(data["results"], 1):
-                    source_badge = "🔀" if rec.get("source") == "hybrid" else "📄"
-                    st.write(
-                        f"{i}. {source_badge} **{rec['title']}** — score: `{rec['score']}`"
+                    render_movie_card(
+                        i, rec["title"], rec["score"], rec.get("source", "content")
                     )
             else:
                 st.error(r.json().get("detail", "Something went wrong"))
@@ -180,7 +181,6 @@ with tab_rate:
     if not st.session_state.token:
         st.info("Log in to rate movies and get personalized recommendations.")
     else:
-        # Submit a rating
         with st.form("rate_form"):
             movie_id = st.text_input("Movie ID (UUID)")
             rating_val = st.slider("Rating", 0.5, 5.0, 3.0, 0.5)
@@ -200,19 +200,15 @@ with tab_rate:
                     else:
                         st.error(r.json().get("detail", "Failed to submit rating"))
 
-        # View my ratings
         st.divider()
         st.subheader("My Ratings")
         if st.button("Load my ratings"):
-            import jwt
-
             try:
                 payload = jwt.decode(
                     st.session_state.token,
                     algorithms=["HS256"],
                     options={"verify_signature": False},
                 )
-
                 user_id = payload.get("sub")
                 r = api_get(f"/ratings/{user_id}", auth=True)
                 if r.status_code == 200:
@@ -221,7 +217,9 @@ with tab_rate:
                         st.info("No ratings yet.")
                     else:
                         for rating in ratings:
-                            st.write(f"🎬 `{rating['movie_id']}` —  {rating['rating']}")
+                            st.write(
+                                f"🎬 `{rating['movie_id']}` —  {rating['rating']}"
+                            )
                 else:
                     st.error(r.json().get("detail", "Failed to load ratings"))
             except Exception as e:
