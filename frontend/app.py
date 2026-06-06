@@ -32,6 +32,7 @@ def api_get(endpoint: str, params: dict = {}, auth: bool = False):
     r = requests.get(f"{API_BASE}{endpoint}", params=params, headers=headers)
     return r
 
+
 def get_poster_url(title: str) -> str | None:
     try:
         r = requests.get(
@@ -46,6 +47,7 @@ def get_poster_url(title: str) -> str | None:
     except Exception:
         pass
     return None
+
 
 def render_movie_card(rank: int, title: str, score: float, source: str):
     source_badge = "🔀 Hybrid" if source == "hybrid" else "📄 Content"
@@ -104,7 +106,7 @@ with st.sidebar:
                         "password": signup_pass,
                     },
                 )
-                if r.status_code == 201:
+                if r.status_code in (200, 201):
                     st.success("Account created! Please log in.")
                 else:
                     st.error(r.json().get("detail", "Signup failed"))
@@ -217,9 +219,7 @@ with tab_rate:
                         st.info("No ratings yet.")
                     else:
                         for rating in ratings:
-                            st.write(
-                                f"🎬 `{rating['movie_id']}` —  {rating['rating']}"
-                            )
+                            st.write(f"🎬 `{rating['movie_id']}` —  {rating['rating']}")
                 else:
                     st.error(r.json().get("detail", "Failed to load ratings"))
             except Exception as e:
