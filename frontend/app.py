@@ -62,7 +62,7 @@ def render_movie_card(rank: int, title: str, score: float, source: str):
                 st.markdown("🎬")
         with col2:
             st.markdown(f"**{rank}. {title}**")
-            st.caption(f"Score: `{score}` · {source_badge}")
+            st.caption(f"Match: `{score}` · {source_badge}")
         st.divider()
 
 
