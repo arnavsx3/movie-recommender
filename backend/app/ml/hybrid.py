@@ -1,11 +1,29 @@
 from sqlalchemy.orm import Session
 from backend.app.ml.recommender import recommend_by_title, recommend_by_text
 from backend.app.ml.collaborative import recommend_collaborative
-from backend.app.db.models import Rating
+from backend.app.ml.recommender import _get_collection, _get_model
+from backend.app.db.models import Rating, Movie
+from uuid import UUID
 
 
 def _has_ratings(user_id: str, db: Session) -> bool:
     return db.query(Rating).filter(Rating.user_id == user_id).count() > 0
+
+def _get_user_rated_titles(
+    user_id: str, db: Session, min_rating: float = 3.5
+) -> list[str]:
+    """Return titles the user rated at or above min_rating."""
+    ratings = (
+        db.query(Rating)
+        .filter(Rating.user_id == user_id, Rating.rating >= min_rating)
+        .all()
+    )
+    titles = []
+    for r in ratings:
+        movie = db.query(Movie).filter(Movie.id == r.movie_id).first()
+        if movie:
+            titles.append(movie.title)
+    return titles
 
 
 def _blend(
