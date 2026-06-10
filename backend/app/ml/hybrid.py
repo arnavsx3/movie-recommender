@@ -25,6 +25,38 @@ def _get_user_rated_titles(
             titles.append(movie.title)
     return titles
 
+def _find_because_of(rec_title: str, rated_titles: list[str]) -> str | None:
+    """Find which rated movie is most similar to the recommendation via ChromaDB."""
+    if not rated_titles:
+        return None
+
+    collection = _get_collection()
+    model = _get_model()
+
+    best_title = None
+    best_score = -1.0
+
+    for rated_title in rated_titles:
+        rated_embedding = model.encode(rated_title).tolist()
+        results = collection.query(
+            query_embeddings=[rated_embedding],
+            n_results=20,
+        )
+        metadatas = results.get("metadatas") or []
+        distances = results.get("distances") or []
+
+        if not metadatas:
+            continue
+
+        for t, d in zip(metadatas[0], distances[0]):
+            if str(t).lower() == rec_title.lower():
+                score = 1 - d
+                if score > best_score:
+                    best_score = score
+                    best_title = rated_title
+                break
+
+    return best_title if best_score > 0.1 else None
 
 def _blend(
     content_results: list[dict],
