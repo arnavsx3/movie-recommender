@@ -3,7 +3,6 @@ from backend.app.ml.recommender import recommend_by_title, recommend_by_text
 from backend.app.ml.collaborative import recommend_collaborative
 from backend.app.ml.recommender import _get_collection, _get_model
 from backend.app.db.models import Rating, Movie
-from uuid import UUID
 
 
 def _has_ratings(user_id: str, db: Session) -> bool:
