@@ -119,3 +119,29 @@ def hybrid_recommend_by_title(
 
     rated_titles = _get_user_rated_titles(user_id, db)
     return _blend(content_results, collab_results, rated_titles, alpha=alpha)
+
+def hybrid_recommend_by_text(
+    text: str,
+    n: int = 10,
+    user_id: str | None = None,
+    db: Session | None = None,
+    alpha: float = 0.5,
+) -> list[dict]:
+    content_results = recommend_by_text(text=text, n=n)
+
+    if not user_id or not db or not _has_ratings(user_id, db):
+        for r in content_results:
+            r["source"] = "content"
+            r["because_of"] = None
+        return content_results
+
+    collab_results = recommend_collaborative(user_id=user_id, db=db, n=n)
+
+    if not collab_results:
+        for r in content_results:
+            r["source"] = "content"
+            r["because_of"] = None
+        return content_results
+
+    rated_titles = _get_user_rated_titles(user_id, db)
+    return _blend(content_results, collab_results, rated_titles, alpha=alpha)
