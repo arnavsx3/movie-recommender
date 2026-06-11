@@ -61,12 +61,9 @@ def _find_because_of(rec_title: str, rated_titles: list[str]) -> str | None:
 def _blend(
     content_results: list[dict],
     collab_results: list[dict],
+    rated_titles: list[str],
     alpha: float = 0.5,
 ) -> list[dict]:
-    """
-    Blend content and collaborative scores.
-    alpha controls weight: 1.0 = pure content, 0.0 = pure collaborative.
-    """
     max_rating = 5.0
 
     collab_map = {
@@ -76,21 +73,26 @@ def _blend(
     blended = []
     for item in content_results:
         title = item["title"]
-        content_score = item["score"]  # already 0–1
+        content_score = item["score"]
         collab_score = collab_map.get(title, 0.0)
 
         final_score = alpha * content_score + (1 - alpha) * collab_score
-        blended.append(
-            {
-                "title": title,
-                "score": round(final_score, 4),
-                "source": "hybrid" if collab_score > 0 else "content",
-            }
-        )
+        is_hybrid = collab_score > 0
+
+        entry = {
+            "title": title,
+            "score": round(final_score, 4),
+            "source": "hybrid" if is_hybrid else "content",
+            "because_of": None,
+        }
+
+        if is_hybrid:
+            entry["because_of"] = _find_because_of(title, rated_titles)
+
+        blended.append(entry)
 
     blended.sort(key=lambda x: x["score"], reverse=True)
     return blended
-
 
 def hybrid_recommend_by_title(
     title: str,
@@ -104,6 +106,7 @@ def hybrid_recommend_by_title(
     if not user_id or not db or not _has_ratings(user_id, db):
         for r in content_results:
             r["source"] = "content"
+            r["because_of"] = None
         return content_results
 
     collab_results = recommend_collaborative(user_id=user_id, db=db, n=n)
@@ -111,29 +114,8 @@ def hybrid_recommend_by_title(
     if not collab_results:
         for r in content_results:
             r["source"] = "content"
+            r["because_of"] = None
         return content_results
 
-    return _blend(content_results, collab_results, alpha=alpha)
-
-def hybrid_recommend_by_text(
-    text: str,
-    n: int = 10,
-    user_id: str | None = None,
-    db: Session | None = None,
-    alpha: float = 0.5,
-) -> list[dict]:
-    content_results = recommend_by_text(text=text, n=n)
-
-    if not user_id or not db or not _has_ratings(user_id, db):
-        for r in content_results:
-            r["source"] = "content"
-        return content_results
-
-    collab_results = recommend_collaborative(user_id=user_id, db=db, n=n)
-
-    if not collab_results:
-        for r in content_results:
-            r["source"] = "content"
-        return content_results
-
-    return _blend(content_results, collab_results, alpha=alpha)
+    rated_titles = _get_user_rated_titles(user_id, db)
+    return _blend(content_results, collab_results, rated_titles, alpha=alpha)
