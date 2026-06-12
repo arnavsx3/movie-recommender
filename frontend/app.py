@@ -49,7 +49,9 @@ def get_poster_url(title: str) -> str | None:
     return None
 
 
-def render_movie_card(rank: int, title: str, score: float, source: str):
+def render_movie_card(
+    rank: int, title: str, score: float, source: str, because_of: str | None = None
+):
     source_badge = "🔀 Hybrid" if source == "hybrid" else "📄 Content"
     poster_url = get_poster_url(title)
 
@@ -63,8 +65,9 @@ def render_movie_card(rank: int, title: str, score: float, source: str):
         with col2:
             st.markdown(f"**{rank}. {title}**")
             st.caption(f"Match: `{score}` · {source_badge}")
+            if because_of:
+                st.caption(f"💡 Because you watched **{because_of}**")
         st.divider()
-
 
 with st.sidebar:
     st.header("Account")
