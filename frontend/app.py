@@ -69,6 +69,7 @@ def render_movie_card(
                 st.caption(f"💡 Because you watched **{because_of}**")
         st.divider()
 
+
 with st.sidebar:
     st.header("Account")
 
@@ -149,7 +150,11 @@ with tab_recommend:
                 st.markdown(f"**Recommendations for:** {data['title']}")
                 for i, rec in enumerate(data["recommendations"], 1):
                     render_movie_card(
-                        i, rec["title"], rec["score"], rec.get("source", "content")
+                        i,
+                        rec["title"],
+                        rec["score"],
+                        rec.get("source", "content"),
+                        rec.get("because_of"),
                     )
             else:
                 st.error(r.json().get("detail", "Something went wrong"))
@@ -174,7 +179,11 @@ with tab_search:
                 st.markdown(f"**Results for:** {data['query']}")
                 for i, rec in enumerate(data["results"], 1):
                     render_movie_card(
-                        i, rec["title"], rec["score"], rec.get("source", "content")
+                        i,
+                        rec["title"],
+                        rec["score"],
+                        rec.get("source", "content"),
+                        rec.get("because_of"),
                     )
             else:
                 st.error(r.json().get("detail", "Something went wrong"))
