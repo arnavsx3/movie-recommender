@@ -53,7 +53,8 @@ def render_movie_card(
     rank: int, title: str, score: float, source: str, because_of: str | None = None
 ):
     source_badge = "🔀 Hybrid" if source == "hybrid" else "📄 Content"
-    poster_url = get_poster_url(title)
+    with st.spinner(""):
+        poster_url = get_poster_url(title)
 
     with st.container():
         col1, col2 = st.columns([1, 3])
